@@ -102,7 +102,7 @@ def load_data():
         rd.flushdb()
         return 'Fireball and Bolide data DELETED from Redis.\n'
 
-@app.route('/peak_brightness_timestamp', methods = ['GET'])
+@app.route('/timestamp', methods = ['GET'])
 def peak_brightness_timestamp():
     """
     """
@@ -115,7 +115,7 @@ def peak_brightness_timestamp():
 
     return jsonify(data)
 
-@app.route('/peak_brightness_timestamp/<string:pb_date>', methods = ['GET'])
+@app.route('/timestamp/<string:pb_date>', methods = ['GET'])
 def value_at_pb_date(pb_date):
     """
     """
@@ -124,7 +124,7 @@ def value_at_pb_date(pb_date):
         return 'No data associated with this timestamp.\n'
     return jsonify(data)
 
-@app.route('/peak_brightness_timestamp/<string:pb_date>/speed', methods = ['GET'])
+@app.route('/timestamp/<string:pb_date>/speed', methods = ['GET'])
 def velocity_at_pb_date(pb_date):
     """
     """
@@ -143,7 +143,7 @@ def velocity_at_pb_date(pb_date):
     return jsonify(val_data)
     
 
-@app.route('/peak_brightness_timestamp/<string:pb_date>/energy', methods = ['GET'])
+@app.route('/timestamp/<string:pb_date>/energy', methods = ['GET'])
 def energy_at_pb_date(pb_date):
     """
     """
@@ -159,7 +159,7 @@ def energy_at_pb_date(pb_date):
 
 #EDIT THIS FOR USE IN FIREBALL_API
 #Route to return latitude, longitue, altitude, and geoposition for given epoch.
-@app.route('/peak_brightness_timestamp/<string:pb_date>/location', methods = ['GET'])
+@app.route('/timestamp/<string:pb_date>/location', methods = ['GET'])
 def fireball_location(pb_date:str) -> dict:
     """
     Route that returns latitude, longitude, altitude, and geoposition for a given <epoch>.
