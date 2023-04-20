@@ -87,7 +87,7 @@ The API front end is expose on port 5000 inside the container. Try the following
 | `/timestamp/<string: pr_date>/energy`  | GET |  Returns the energy for a specific timestamp |
 | `/timestamp/<string: pr_date>/location`  | GET |  Return geographical position for a specific timestamp |
 | `/help`  | GET |  Returns text that describes each route & what they do |
-|`/image`    | GET | Returns plot file from Redis_image database|
+|`/graph`    | GET | Returns plot file from Redis_image database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
 
@@ -108,8 +108,15 @@ The API front end is expose on port 5000 inside the container. Try the following
 
 	$ curl localhost:5000/timestamp/<string: pr_date>/location 	Return positional data for a specific timestamp.
 
+	$ curl -X POST localhost:5000/graph 
+
+	$ curl -X GET localhost:5000/graph --output graph.jpg
+
+	$ curl -X DELETE localhost:5000/graph
 
 	$ curl localhost:5000/help	Returns help text (as a string) that briefly describes each route.
+
+
 
 ###### **Running iss_tracker.py**
 
