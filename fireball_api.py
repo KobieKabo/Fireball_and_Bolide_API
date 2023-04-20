@@ -15,7 +15,7 @@ import redis
 from datetime import datetime
 from datetime import timedelta
 from geopy.geocoders import Nominatim
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from geopy.point import Point
 
 app = Flask(__name__)
@@ -267,6 +267,7 @@ def create_graph():
                     ttl_impact_energy = np.asarray([rd.hget(key, 'impact_energy')])
 
             plt.scatter(energy_radiated, ttl_impact_energy)
+            plt.title('Energy Radiated vs Meteor Impact Energy')
             plt.xlabel('Total Energy Radiated')
             plt.ylabel('Total Impact Energy')
 
@@ -280,7 +281,7 @@ def create_graph():
     
     # posting/getting are identical to my hw8, which was working. Should work once POST does.
     elif request.method == 'GET':
-        image = rd_image.get()
+        image = rd_image.get('image')
         buf = io.BytesIO(image)
         buf.seek(0)
 
