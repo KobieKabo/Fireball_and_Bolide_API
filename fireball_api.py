@@ -1,4 +1,5 @@
 import math
+import binascii
 import requests
 import xmltodict
 import xml.etree.ElementTree as ET
@@ -12,6 +13,7 @@ import numpy as np
 import json
 import csv
 import redis
+from uuid import uuid4
 from datetime import datetime
 from datetime import timedelta
 from geopy.geocoders import Nominatim
@@ -86,6 +88,11 @@ def load_data():
                 impact_energy = item.find('calculated_total_impact_energy_kt')
                 if impact_energy is not None:
                     item_dict['impact_energy'] = impact_energy.text
+                if x_velocity is not None and y_velocity is not None and z_velocity is not None:
+                    velocity_magnitude = float(x_velocity.text)**2 + float(y_velocity.text)**2 + float(z_velocity.text)**2
+                    item_dict['velocity_magnitude'] = velocity_magnitude
+
+
                 #Map item_dict to unique uuid
                 #rd.hset(fb_uuid, mapping = item_dict)
                 #Map item_dict to a unique peak_brightness date
@@ -137,9 +144,11 @@ def velocity_at_pb_date(pb_date):
     if not data:
         return 'No velocity data available at this timestamp.\n'
     if rd.hget(pb_date,'x_velocity') is not None and rd.hget(pb_date,'y_velocity') is not None and rd.hget(pb_date,'z_velocity') is not None:
+        
         val_data = {'x_velocity': rd.hget(pb_date,'x_velocity') + " [km/s]",
                        'y_velocity': rd.hget(pb_date,'y_velocity') + " [km/s]",
-                       'z_velocity': rd.hget(pb_date,'z_velocity') + " [km/s]"}
+                       'z_velocity': rd.hget(pb_date,'z_velocity') + " [km/s]",
+                       'velocity_magnitude' : rd.hget(pb_date, 'velocity_magnitude') + " [km/s]"}
     else:
         val_data = {'x_velocity': "N/A" + " [km/s]",
                     'y_velocity': "N/A" + " [km/s]",
@@ -161,7 +170,6 @@ def energy_at_pb_date(pb_date):
     return jsonify(val_data)
 
 
-#EDIT THIS FOR USE IN FIREBALL_API
 #Route to return latitude, longitue, altitude, and geoposition for given epoch.
 @app.route('/timestamp/<string:pb_date>/location', methods = ['GET'])
 def fireball_location(pb_date:str) -> dict:
@@ -254,18 +262,19 @@ def create_graph():
         rd_image.flushdb()
         return 'The graphs have been removed from the redis database.\n'
 
-    # Should be working?? Not 100%
     elif request.method == 'POST':
         if (len(rd.keys()) == 0):
             return 'No data is available. Please Post the data.'
         else:
+            energy_radiated = []
+            ttl_impact_energy = []
             keys = rd.keys()
             for key in keys:
                 if rd.hget(key, 'radiated_energy') is not None and rd.hget(key, 'impact_energy') is not None:
                     # Need to ensure array sizes are the same.
-                    energy_radiated = np.asarray([rd.hget(key, 'radiated_energy')])
-                    ttl_impact_energy = np.asarray([rd.hget(key, 'impact_energy')])
-
+                    energy_radiated.append(float(rd.hget(key, 'radiated_energy')))
+                    ttl_impact_energy.append(float(rd.hget(key, 'impact_energy')))
+            
             plt.scatter(energy_radiated, ttl_impact_energy)
             plt.title('Energy Radiated vs Meteor Impact Energy')
             plt.xlabel('Total Energy Radiated')
@@ -275,26 +284,25 @@ def create_graph():
             plt.savefig(buf, format = 'jpg')
             buf.seek(0)
 
-            rd_image.set('image',buf.getvalue())
+            image_data = buf.getvalue()
 
-            return 'Image has been posted'
+            rd_image.set('image', image_data.hex())
+            
+            return 'Image has been posted.\n'
     
     # posting/getting are identical to my hw8, which was working. Should work once POST does.
     elif request.method == 'GET':
-        image = rd_image.get('image')
+        image = binascii.unhexlify(rd_image.get('image'))
         buf = io.BytesIO(image)
         buf.seek(0)
+        
+        response = send_file(buf, mimetype = 'image/jpg', as_attachment=True, download_name='graph.jpg')
 
-        existing_images = rd_image.keys() == 0
-
-        file_name = f'image{existing_images}.jpg'
-
-        return send_file(buf, mimetype = 'image/jpg')
-
-
+        return response
 
     else:
         return 'The method used is not supported. Please use GET, DELETE, or POST.'
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
