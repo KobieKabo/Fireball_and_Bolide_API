@@ -1,0 +1,14 @@
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+        name: app-test-data
+spec:
+        accessModes:
+                - ReadWriteOnce
+        storageClassName: cinder-csi
+        resources:
+                requests:
+                        storage: 1Gi
+

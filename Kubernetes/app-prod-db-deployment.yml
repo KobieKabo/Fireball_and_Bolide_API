@@ -1,0 +1,29 @@
+#Step 2, Homework 7 : redis deployment
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+        name: app-test-redis
+        labels:
+                app: app-test-redis
+spec:
+        replicas: 1
+        selector:
+                matchLabels:
+                        app: app-test-redis
+        template:
+                metadata:
+                        labels:
+                                app: app-test-redis
+                spec:
+                        containers:
+                                - name: app-test-redis
+                                  image: redis:7
+                                  volumeMounts:
+                                          - name: app-test-redis
+                                            mountPath: "/data"
+                        volumes:
+                        - name: app-test-redis
+                          persistentVolumeClaim:
+                            claimName: app-test-data
