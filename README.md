@@ -43,6 +43,21 @@ With the iss_tracker container running, curl in another window to interact with 
 
 The API front end is expose on port 5000 inside the container. Try the following routes:
 
+| Route         | Method        | Return |
+| ------------- |:-------------:| ------------- |
+| `/data`     | GET | Return all data in Redis database | 
+| 	      | DELETE |  Delete data from Redis database | 
+| 	      | POST | Post data into Redis database | 
+| `/timestamp`    | GET |  Returns all available timestamps for each fireball recorded |
+| `/timestamp/<string: pr_date>`  | GET |  Return all data for a specific timestamp |
+| `/timestamp/<string: pr_date>/speed`  | GET |  Returns the speed of the fireball for a specific timestamp |
+| `/timestamp/<string: pr_date>/energy`  | GET |  Returns the energy for a specific timestamp |
+| `/timestamp/<string: pr_date>/location`  | GET |  Return geographical position for a specific timestamp |
+| `/help`  | GET |  Returns text that describes each route & what they do |
+|`/image`    | GET | Returns plot file from Redis_image database|
+| 	     | DELETE |  Deletes plot from Redis_image database | 
+| 	     | POST | Posts plot into Redis_image database | 
+
 
 	$ curl -X POST localhost:5000/data	Load the entire data set into Redis.
 	
@@ -67,4 +82,3 @@ The API front end is expose on port 5000 inside the container. Try the following
 
 	
 **Expected Output, Sample**
-
