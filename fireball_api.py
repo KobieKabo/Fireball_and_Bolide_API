@@ -6,6 +6,7 @@ import urllib.request
 import yaml
 import time
 import os
+import io
 import matplotlib.pyplot as plt
 import numpy as np
 import json
@@ -28,8 +29,11 @@ app = Flask(__name__)
 #Connect to redis without kubernetes - for development of API
 rd = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
 
+# Second redis db to store plots on so as not not mix data
+# should probably make functions to catch exception errors, but that'll come later.
+rd_image = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
 
-#Load in data
+#Load in data 
 @app.route('/data', methods = ['POST', 'GET', 'DELETE'])
 def load_data():
     """
@@ -241,7 +245,55 @@ def help():
                 output += f'{func.__doc__}\n\n'
     return output
 
+@app.route('/graph', methods = ['GET','POST','DELETE'])
+def create_graph():
+    """
+    """
+    
+    if request.method == 'DELETE':
+        rd_image.flushdb()
+        return 'The graphs have been removed from the redis database.\n'
 
+    # Should be working?? Not 100%
+    elif request.method == 'POST':
+        if (len(rd.keys()) == 0):
+            return 'No data is available. Please Post the data.'
+        else:
+            keys = rd.keys()
+            for key in keys:
+                if rd.hget(key, 'radiated_energy') is not None and rd.hget(key, 'impact_energy') is not None:
+                    # Need to ensure array sizes are the same.
+                    energy_radiated = np.asarray([rd.hget(key, 'radiated_energy')])
+                    ttl_impact_energy = np.asarray([rd.hget(key, 'impact_energy')])
+
+            plt.scatter(energy_radiated, ttl_impact_energy)
+            plt.xlabel('Total Energy Radiated')
+            plt.ylabel('Total Impact Energy')
+
+            buf = io.BytesIO()
+            plt.savefig(buf, format = 'jpg')
+            buf.seek(0)
+
+            rd_image.set('image',buf.getvalue())
+
+            return 'Image has been posted'
+    
+    # posting/getting are identical to my hw8, which was working. Should work once POST does.
+    elif request.method == 'GET':
+        image = rd_image.get()
+        buf = io.BytesIO(image)
+        buf.seek(0)
+
+        existing_images = rd_image.keys() == 0
+
+        file_name = f'image{existing_images}.jpg'
+
+        return send_file(buf, mimetype = 'image/jpg')
+
+
+
+    else:
+        return 'The method used is not supported. Please use GET, DELETE, or POST.'
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
