@@ -10,12 +10,12 @@ import os
 import io
 import matplotlib.pyplot as plt
 import numpy as np
-import jobs
+from jobs import add_job
 import json
 import csv
 import redis
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, date
 from datetime import timedelta
 from geopy.geocoders import Nominatim
 from flask import Flask, request, jsonify, send_file
@@ -24,17 +24,18 @@ from geopy.point import Point
 app = Flask(__name__)
 
 #From Homework 8 to Automatically Connect to Kubernetes
-#redis_ip = os.environ.get('REDIS_IP')
-#if not redi_ip:
-#    raise Exception('REDIS_IP enviornment variable not sen\n')
-#rd = redis.Redis(host = redis_ip, port = 6379, db = 0)
+redis_ip = os.environ.get('REDIS_IP')
+if not redis_ip:
+    raise Exception('REDIS_IP enviornment variable not sen\n')
+rd = redis.Redis(host = redis_ip, port = 6379, db = 0, decode_responses=True)
+rd_image = redis.Redis(host= redis_ip, port=6379, db=1, decode_responses=True)
 
 #Connect to redis without kubernetes - for development of API
-rd = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
+#rd = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
 
 # Second redis db to store plots on so as not not mix data
 # should probably make functions to catch exception errors, but that'll come later.
-rd_image = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
+#rd_image = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
 
 #Load in data 
 @app.route('/data', methods = ['POST', 'GET', 'DELETE'])
@@ -94,9 +95,6 @@ def load_data():
                     item_dict['velocity_magnitude'] = velocity_magnitude
 
 
-                #Map item_dict to unique uuid
-                #rd.hset(fb_uuid, mapping = item_dict)
-                #Map item_dict to a unique peak_brightness date
                 rd.hset(peak_brightness, mapping = item_dict)
         return 'Fireball and Bolide data loaded into Redis.\n'
 
@@ -304,18 +302,41 @@ def create_graph():
     else:
         return 'The method used is not supported. Please use GET, DELETE, or POST.'
 
-@app.route('/jobs', methods = ['POST'])
+@app.route('/jobs', methods = ['POST', 'GET'])
 def jobs_api():
     """
     API route for creating a new job to do some analysis. This route accepts a JSON payload
     describing the job to be created.
     """
-    try:
-        job = request.get_json(force=True)
-    except Exception as e:
-        return True, json.dumps({'status': "Error", 'message': 'Invalid JSON: {}.'.format(e)})
+    if request.method == 'POST':
+        start = date.today().year
+        end = date.today().year
+        status = 'submitted'
+        job = add_job(start, end, status)
+        return job
 
-    return json.dumps(jobs.add_job(job['start'], job['end']))
+    if request.method == 'GET':
+        keys = rd.keys()
+        job_ids = []
+        for key in keys:
+            ids = rd.hget(key, 'id')
+            data = rd.hgetall(key)
+            if ids:
+                job_ids.append(data)
+
+
+        return jsonify(job_ids)
+
+        return keys
+
+@app.route('/jobs/<string:this_job_id>', methods = ['GET'])
+def job_id(this_job_id):
+    
+    data = rd.hgetall(this_job_id)
+    if data:
+        return data['status'] + '\n'
+    else:
+        return 'No data available at this job id.\n'
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

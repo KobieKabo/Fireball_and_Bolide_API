@@ -37,38 +37,42 @@ How to build a new image from Dockerfile:
 
 Create a persistent volume claim (pvc)
 
-        kubectl apply -f app-prod-db-pvc.yml
+	kubectl apply -f app-prod-db-pvc.yml
 
 Deploy redis on the kubernetes cluster
 
-        kubectl apply -f app-prod-db-deployment.yml
+	kubectl apply -f app-prod-db-deployment.yml
 
 
 Deploy redis service on kubernetes cluster
 
-        kubectl apply -f app-prod-db-service.yml
+	kubectl apply -f app-prod-db-service.yml
 
 Add the redis IP address to the app-prod-api-deployment.yml
 
-        kubectl get services
+	kubectl get services
 
-        Copy app-test-service IP address to the REDIS_IP value in the api deployment file.
+	Copy app-test-service IP address to the REDIS_IP value in the api deployment file.
 
 Create a flask deployment:
 
-        kubectl apply -f app-prod-api-deployment.yml
+	kubectl apply -f app-prod-api-deployment.yml
 
 Create a flask service:
 
-        kubectl apply -f app-prod-api-service.yml
+	kubectl apply -f app-prod-api-service.yml
 
 How to curl data while in kubernetes cluster?
 
-        Exec into test flask pod --> kubectl get pods
+	Exec into test flask pod --> kubectl get pods
 
-        kubectl exec -it app-test-flask-54cc78df9b-djtwf -- /bin/bash
+	kubectl exec -it app-test-flask-54cc78df9b-djtwf -- /bin/bash
 
-        curl -X POST localhost:5000/data
+	curl -X POST localhost:5000/data
+
+Start the container in the foreground:
+
+	docker-compose config
 
 With the iss_tracker container running, curl in another window to interact with the program.
 
@@ -87,7 +91,7 @@ The API front end is expose on port 5000 inside the container. Try the following
 | `/timestamp/<string: pr_date>/energy`  | GET |  Returns the energy for a specific timestamp |
 | `/timestamp/<string: pr_date>/location`  | GET |  Return geographical position for a specific timestamp |
 | `/help`  | GET |  Returns text that describes each route & what they do |
-|`/graph`    | GET | Returns plot file from Redis_image database|
+|`/image`    | GET | Returns plot file from Redis_image database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
 
@@ -108,17 +112,12 @@ The API front end is expose on port 5000 inside the container. Try the following
 
 	$ curl localhost:5000/timestamp/<string: pr_date>/location 	Return positional data for a specific timestamp.
 
-	$ curl -X POST localhost:5000/graph 
-
-	$ curl -X GET localhost:5000/graph --output graph.jpg
-
-	$ curl -X DELETE localhost:5000/graph
 
 	$ curl localhost:5000/help	Returns help text (as a string) that briefly describes each route.
 
-
-
 ###### **Running iss_tracker.py**
+
+To get graph from pod : kubectl cp app-test-flask-55db755fcb-58x6h:graph.jpg graphdownload.jpg
 
 	
 **Expected Output, Sample**

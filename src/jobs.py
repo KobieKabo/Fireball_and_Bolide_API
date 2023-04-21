@@ -1,17 +1,18 @@
 import uuid
 from hotqueue import HotQueue
+from flask import jsonify
 import redis
 from uuid import uuid4
 import os
 
-#redis_ip = os.environ.get('REDIS_IP')
-#if not redi_ip:
-#    raise Exception('REDIS_IP enviornment variable not sen\n')
-#q = HotQueue("queue", host=redis_ip, port=6379, db=1)
-#rd = redis.Redis(host=redis_ip, port=6379, db=0)
+redis_ip = os.environ.get('REDIS_IP')
+if not redis_ip:
+    raise Exception('REDIS_IP enviornment variable not sen\n')
+q = HotQueue("queue", host=redis_ip, port=6379, db=1)
+rd = redis.Redis(host=redis_ip, port=6379, db=0)
 
-q = HotQueue("queue", host='172.17.0.1', port=6379, db=1)
-rd = redis.Redis(host='172.17.0.1', port=6379, db=0)
+#q = HotQueue("queue", host='172.17.0.1', port=6379, db=1)
+#rd = redis.Redis(host='172.17.0.1', port=6379, db=0)
 
 def generate_job_id():
     """
@@ -43,6 +44,7 @@ def instantiate_job(job_id,status,start,end):
 
 def save_job(job_key, job_dict):
     """Save a job object in the Redis database."""
+    #print("save_job, job_key = ", job_key)
     rd.hset(job_key,mapping = job_dict)
     
 
@@ -52,23 +54,29 @@ def queue_job(job_id):
     """
     q.put(job_id)
 
-def add_job(start, end, status='submitted'):
+#def add_job(start, end, status='submitted'):
+def add_job(start, end, status):
     """
     Pushes a job to the redis queue & updates job dictionary.
     """
+    print(type(start))
+    print(type(end))
     job_id = generate_job_id()
     job_dict = instantiate_job(job_id,status,start,end)
     #generate_job_id_key(job_id)
     save_job(job_id, job_dict)
     queue_job(job_id)
-    return job_dict
+    return jsonify(job_dict)
 
 def update_job_status(job_id, status):
     """Update the status of job with job id `jid` to status `status`."""
-    job = get_job_by_id(job_id)
+    #job = get_job_by_id(job_id)
+    job = rd.hgetall(job_id)
+    #print('update_job, job = ', job)
     if job:
         job['status'] = status
-        save_job(_generate_job_key(jid), job)
+        #save_job(_generate_job_key(jid), job)
+        save_job(job_id, job)
     else:
         raise Exception()
 

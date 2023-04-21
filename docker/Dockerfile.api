@@ -1,10 +1,11 @@
-#TO BE USED WITH KUBERNETES
 
-FROM python:3.8.10
+FROM python:3.8.10 
 
-ENV REDIS_IP redis-db
+ENV REDIS_IP=redis-db
 
 RUN pip install Flask==2.2.2
+
+RUN pip install hotqueue==0.2.8
 
 RUN pip install redis==4.5.1
 
@@ -20,6 +21,9 @@ RUN pip install pyyaml==6.0
 
 RUN pip install matplotlib==3.7.1
 
+ADD ./jobs.py /jobs.py
+
 ADD ./fireball_api.py /fireball_api.py
 
 CMD ["python", "/fireball_api.py"]
+
