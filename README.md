@@ -98,7 +98,7 @@ Create the Ingress object:
 
 We can test by running the following curl command from anywhere, including our laptops.
 
-	curl -X POST localhost:5000/data
+	curl -X POST username.coe332.tacc.cloud/data
 
 ##### **Fireball API Front End:**
 
