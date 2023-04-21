@@ -10,6 +10,7 @@ import os
 import io
 import matplotlib.pyplot as plt
 import numpy as np
+import jobs
 import json
 import csv
 import redis
@@ -303,6 +304,18 @@ def create_graph():
     else:
         return 'The method used is not supported. Please use GET, DELETE, or POST.'
 
+@app.route('/jobs', methods = ['POST'])
+def jobs_api():
+    """
+    API route for creating a new job to do some analysis. This route accepts a JSON payload
+    describing the job to be created.
+    """
+    try:
+        job = request.get_json(force=True)
+    except Exception as e:
+        return True, json.dumps({'status': "Error", 'message': 'Invalid JSON: {}.'.format(e)})
+
+    return json.dumps(jobs.add_job(job['start'], job['end']))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
