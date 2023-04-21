@@ -27,11 +27,15 @@ The fireball_api.py script initializes a Flask instance, loads data from the NAS
 
 How to pull and use the Dockerfule from Docker Hub:
 
-	docker pull khanks0217/fireball_api:1.0
+	docker pull khanks0217/fireball_api:1.1
+
+	docker pull khanks0217/fireball_api:1.wrk
 
 How to build a new image from Dockerfile:
 
-	docker build -t username/fireball_api:1.0 .
+	docker build -f Dockerfile.api -t username/fireball_api:1.1
+
+	docker build -f Dockerfile.wrk -t username/fireball_api:1.wrk
 
 #### **Instructions - How to use genes_api on Kubernetes**
 
@@ -62,19 +66,39 @@ Create a flask service:
 
 	kubectl apply -f app-prod-api-service.yml
 
-How to curl data while in kubernetes cluster?
+Create a worker deployment:
 
-	Exec into test flask pod --> kubectl get pods
+	kubectl apply -f app-prod-wrk-deployment.yml
 
-	kubectl exec -it app-test-flask-54cc78df9b-djtwf -- /bin/bash
+Create a NodePort:
+
+	kubectl apply -f app-prod-api-nodeport.yml
+
+Copy the nodeport port to app-prod-api-ingress.yml
+
+	kubectl get services
+
+	NAME                         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+	flasktest-service-nodeport   NodePort    10.233.15.48   <none>        5000:31587/TCP   45s
+
+	Edit app-prod-api-ingress.yml 
+	host: "username.coe332.tacc.cloud" <-- This should be your username
+	...
+	port:
+	  number: 31587   <--This should be the same as the port from NodePort 5000:/XXXXX
+
+Create the Ingress object:
+
+	kubectl apply -f app-prod-api-ingress.yml
+
+	kubectl get ingress
+
+	NAME                CLASS    HOSTS                       ADDRESS   PORTS   AGE
+	flasktest-ingress   <none>   username.coe332.tacc.cloud             80      102s
+
+We can test by running the following curl command from anywhere, including our laptops.
 
 	curl -X POST localhost:5000/data
-
-Start the container in the foreground:
-
-	docker-compose config
-
-With the iss_tracker container running, curl in another window to interact with the program.
 
 ##### **Fireball API Front End:**
 
@@ -111,7 +135,6 @@ The API front end is expose on port 5000 inside the container. Try the following
 	$ curl localhost:5000/timestamp/<string: pr_date>/energy 	Return energy data for a specific timestamp.
 
 	$ curl localhost:5000/timestamp/<string: pr_date>/location 	Return positional data for a specific timestamp.
-
 
 	$ curl localhost:5000/help	Returns help text (as a string) that briefly describes each route.
 
