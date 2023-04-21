@@ -1,31 +1,29 @@
-#Homework 7 - deployment for flask API
-
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-        name: app-test-flask
+        name: wrk-deployment 
         labels:
-                app: app-test-flask
+                app: worker
 spec:
-        replicas: 2
+        replicas: 1
         selector:
                 matchLabels:
-                        app: app-test-flask
+                        app: worker
         template:
                 metadata:
                         labels:
-                                app: app-test-flask
+                                app: worker
                 spec:
                         containers:
-                                - name: app-test-flask
+                                - name: worker
                                   imagePullPolicy: Always
-                                  image: khanks0217/fireball_api:1.0
+                                  image: khanks0217/fireball_api:1.wrk
                                   env:
                                   - name: FLASK_APP
-                                    value: "fireball_api.py"
+                                    value: "worker.py"
                                   - name: REDIS_IP
-                                    value: 10.233.39.129
+                                    value: 10.233.15.68
                                   ports:
                                   - name: http
                                     containerPort: 5000
