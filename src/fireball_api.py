@@ -34,6 +34,10 @@ rd_speed = redis.Redis(host= redis_ip, port=6379, db=2, decode_responses=True)
 #Connect to redis without kubernetes - for development of API
 #rd = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
 
+# Second redis db to store plots on so as not not mix data
+# should probably make functions to catch exception errors, but that'll come later.
+#rd_image = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
+
 #Load in data 
 @app.route('/data', methods = ['POST', 'GET', 'DELETE'])
 def load_data():
