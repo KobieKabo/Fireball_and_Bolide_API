@@ -35,9 +35,11 @@ How to pull and use the Dockerfule from Docker Hub:
 
 How to build a new image from Dockerfile:
 
-	docker build -f Dockerfile.api -t username/fireball_api:1.1
+	Note: Be sure to include your username with the following commands.
 
-	docker build -f Dockerfile.wrk -t username/fireball_api:1.wrk
+	docker build -f docker/Dockerfile.api -t username/fireball_api:1.1
+
+	docker build -f docker/Dockerfile.wrk -t username/fireball_api:1.wrk
 
 #### **Instructions - How to use genes_api on Kubernetes**
 
@@ -123,14 +125,18 @@ $ curl -X [POST, GET, DELETE] username.coe332.tacc.cloud/
 | `/jobs/<string: job_id>`     | GET | Get status of a specific job by id. |
 | `/jobs/<string: job_id>/results`     | GET | Return the outputs of a completed job. |
 | `/help`  | GET |  Returns text that describes each route & what they do |
-|`/graph`    | GET | Returns plot file from Redis_image database|
+|`/graph_energy`    | GET | Returns energy plot file from Redis_energy database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
-
+|`/graph_energy`    | GET | Returns speed plot file from Redis_speed database|
+|            | DELETE |  Deletes plot from Redis_image database |
+|            | POST | Posts plot into Redis_image database |
 
 To download graphs to local computer:
 
-	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
+	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph_energy --output energy_graph.jpg
+
+	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph_speed --output speed_graph.jpg
 
 ###### **Running iss_tracker.py**
 	
@@ -138,9 +144,38 @@ To download graphs to local computer:
 
 curl -X POST khanks.coe332.tacc.cloud/data
 
+Fireball and Bolide data loaded into Redis.	
+
 curl -X GET khanks.coe332.tacc.cloud/data
 
+{
+    "_address": "https://data.nasa.gov/resource/mc52-syum/row-5m8i_9fxe~2q47",
+    "_id": "row-5m8i_9fxe~2q47",
+    "_position": "0",
+    "_uuid": "00000000-0000-0000-2D6B-D1ADF7A5E88A",
+    "impact_energy": "0.12",
+    "latitude": "3.2N",
+    "longitude": "45.4W",
+    "peak_brightness": "2014-08-28T03:07:45",
+    "radiated_energy": "34000000000"
+  },
+  {
+    "_address": "https://data.nasa.gov/resource/mc52-syum/row-43ir-khtx~jjqx",
+    "_id": "row-43ir-khtx~jjqx",
+    "_position": "0",
+    "_uuid": "00000000-0000-0000-682E-439BE7C0D4F8",
+    "impact_energy": "0.12",
+    "latitude": "22.2N",
+    "longitude": "132.9W",
+    "peak_brightness": "2014-10-21T18:55:37",
+    "radiated_energy": "34000000000"
+  }
+
+	...continued
+
 curl -X DELETE khanks.coe332.tacc.cloud/data
+
+Fireball and Bolide data DELETED from Redis.
 
 curl khanks.coe332.tacc.cloud/timestamp
 
@@ -269,4 +304,97 @@ curl khanks.coe332.tacc.cloud/jobs/d265cece-97e2-4518-95d4-f0d22ef0f93c
 complete
 
 curl khanks.coe332.tacc.cloud/help
+
+Available routs and methods: 
+/data [POST,GET,DELETE,HEAD,OPTIONS]
+
+    POST - Post all fireball and bolide data to Redis.
+
+    GET - Return all fireball and bolide data from redis to the user.
+
+    DELETE - Delete all fireball and bolide data from Redis.
+    
+
+/timestamp [HEAD,OPTIONS,GET]
+
+    Description:
+    API endpoint that returns a list of peak brightness dates for all objects in the database.
+
+    Returns:
+    JSON object containing a list of peak brightness dates for all objects in the database.
+    
+
+/timestamp/<string:pb_date> [HEAD,OPTIONS,GET]
+
+    Description:
+    API endpoint that returns all data for a given timestamp.
+
+    Returns:
+    JSON object containing the data for a specific timestamp in the database.
+    
+
+/timestamp/<string:pb_date>/speed [HEAD,OPTIONS,GET]
+
+    Description:
+    API endpoint that returns the velocity values for a specific timestamp in the database.
+
+    Returns:
+    JSON object containing a dictionary of velocity data. 
+    
+
+/timestamp/<string:pb_date>/energy [HEAD,OPTIONS,GET]
+
+    Description:
+    API endpoint that returns the velocity values for a specific timestamp in the database.
+
+    Returns:
+    JSON object containing a dictionary of energy data for a specific timestamp.
+    
+
+/timestamp/<string:pb_date>/location [HEAD,OPTIONS,GET]
+
+    Route that returns latitude, longitude, altitude, and geoposition for a given <epoch>.
+
+    Returns:
+    Dictionary containing latitude, longitude, altitude, and geoposition.
+    
+
+/help [HEAD,OPTIONS,GET]
+
+    Description:
+    This function is an API endpoint that returns information about all available routes and HTTP methods in the application.
+    
+    Returns:
+    A string containing a list of all available routes and their associated HTTP methods, as well as the docstrings for each endpoint function.
+    
+
+/graph_energy [POST,GET,DELETE,HEAD,OPTIONS]
+
+    POST - Write energy graph data to Redis.
+    GET - Return energy graph to user in form of jpg file.
+    DELETE - Delete energy graph data from redis. 
+    
+
+/graph_speed [POST,GET,DELETE,HEAD,OPTIONS]
+
+    POST -  Post speed graph data to Redis.
+    GET - Return speed graph to user.
+    DELETE - Delete speed graph data from Redis. 
+    
+
+/jobs [POST,HEAD,OPTIONS,GET]
+
+    POST - API route for creating a new job to do some analysis. This route accepts a JSON payload
+    describing the job to be created.
+
+    GET - API route to return jobs to user
+    
+
+/jobs/<string:this_job_id> [HEAD,OPTIONS,GET]
+
+    Description:
+    API endpoint to return status of a job specified by job_id to user. 
+
+    Returns:
+    String describing status of specified job.
 

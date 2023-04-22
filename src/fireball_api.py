@@ -28,14 +28,11 @@ redis_ip = os.environ.get('REDIS_IP')
 if not redis_ip:
     raise Exception('REDIS_IP enviornment variable not sen\n')
 rd = redis.Redis(host = redis_ip, port = 6379, db = 0, decode_responses=True)
-rd_image = redis.Redis(host= redis_ip, port=6379, db=1, decode_responses=True)
+rd_energy = redis.Redis(host= redis_ip, port=6379, db=1, decode_responses=True)
+rd_speed = redis.Redis(host= redis_ip, port=6379, db=2, decode_responses=True)
 
 #Connect to redis without kubernetes - for development of API
 #rd = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
-
-# Second redis db to store plots on so as not not mix data
-# should probably make functions to catch exception errors, but that'll come later.
-#rd_image = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
 
 #Load in data 
 @app.route('/data', methods = ['POST', 'GET', 'DELETE'])
@@ -282,13 +279,16 @@ def help():
                 output += f'{func.__doc__}\n\n'
     return output
 
-@app.route('/graph', methods = ['GET','POST','DELETE'])
+@app.route('/graph_energy', methods = ['GET','POST','DELETE'])
 def create_graph():
     """
+    POST - Write energy graph data to Redis.
+    GET - Return energy graph to user in form of jpg file.
+    DELETE - Delete energy graph data from redis. 
     """
     
     if request.method == 'DELETE':
-        rd_image.flushdb()
+        rd_energy.flushdb()
         return 'The graphs have been removed from the redis database.\n'
 
     elif request.method == 'POST':
@@ -298,6 +298,7 @@ def create_graph():
             energy_radiated = []
             ttl_impact_energy = []
             keys = rd.keys()
+
             for key in keys:
                 if rd.hget(key, 'radiated_energy') is not None and rd.hget(key, 'impact_energy') is not None:
                     # Need to ensure array sizes are the same.
@@ -305,7 +306,7 @@ def create_graph():
                     ttl_impact_energy.append(float(rd.hget(key, 'impact_energy')))
             
             plt.scatter(energy_radiated, ttl_impact_energy)
-            plt.title('Energy Radiated vs Meteor Impact Energy')
+            plt.title('Energy Radiated vs Calculated Impact Energy')
             plt.xlabel('Total Energy Radiated')
             plt.ylabel('Total Impact Energy')
 
@@ -315,17 +316,66 @@ def create_graph():
 
             image_data = buf.getvalue()
 
-            rd_image.set('image', image_data.hex())
+            rd_energy.set('image', image_data.hex())
             
-            return 'Image has been posted.\n'
+            return 'Energy graph has been posted.\n'
     
     # posting/getting are identical to my hw8, which was working. Should work once POST does.
     elif request.method == 'GET':
-        image = binascii.unhexlify(rd_image.get('image'))
+        image = binascii.unhexlify(rd_energy.get('image'))
         buf = io.BytesIO(image)
         buf.seek(0)
         
         response = send_file(buf, mimetype = 'image/jpg', as_attachment=True, download_name='graph.jpg')
+
+        return response
+
+    else:
+        return 'The method used is not supported. Please use GET, DELETE, or POST.'
+
+@app.route('/graph_speed', methods = ['GET', 'POST', 'DELETE'])
+def graph_speed():
+    """
+    POST -  Post speed graph data to Redis.
+    GET - Return speed graph to user.
+    DELETE - Delete speed graph data from Redis. 
+    """
+    if request.method == 'DELETE':
+        rd_speed.flushdb()
+        return "The speed graphs have been removed from redis database.\n"
+
+    elif request.method == 'POST' :
+        if (len(rd.keys()) == 0):
+            return 'No data is available. Please use -X POST /data to post the data.'
+        else:
+            speed = []
+            impact_energy = []
+            keys = rd.keys()
+            for key in keys:
+                if rd.hget(key, 'velocity_magnitude') is not None and rd.hget(key, 'impact_energy') is not None:
+                    speed.append(float(rd.hget(key,'velocity_magnitude')))
+                    impact_energy.append(float(rd.hget(key, 'impact_energy')))
+            plt.scatter(speed, impact_energy)
+            plt.title('Velocity Magnitude vs Calculated Impact Energy')
+            plt.xlabel('Velocity Magnitude')
+            plt.ylabel('Total Impact Energy')
+            plt.legend()
+            buf = io.BytesIO()
+            plt.savefig(buf, format = 'jpg')
+            buf.seek(0)
+
+            image_data = buf.getvalue()
+
+            rd_speed.set('speed_image', image_data.hex())
+
+            return 'Speed v Energy graph has been posted.\n'
+
+    elif request.method == 'GET' :
+        image = binascii.unhexlify(rd_speed.get('speed_image'))
+        buf = io.BytesIO(image)
+        buf.seek(0)
+
+        response = send_file(buf, mimetype = 'image/jpg', as_attachment=True, download_name='speed_graph.jpg')
 
         return response
 
