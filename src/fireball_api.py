@@ -14,31 +14,28 @@ from jobs import add_job
 import json
 import csv
 import redis
-import pandas
 from uuid import uuid4
 from datetime import datetime, date
 from datetime import timedelta
 from geopy.geocoders import Nominatim
 from flask import Flask, request, jsonify, send_file
 from geopy.point import Point
-from mpl_toolkits.basemap import Basemap
-from itertools import chain
 
 app = Flask(__name__)
 
 #From Homework 8 to Automatically Connect to Kubernetes
-#redis_ip = os.environ.get('REDIS_IP')
-#if not redis_ip:
-#    raise Exception('REDIS_IP enviornment variable not sen\n')
-#rd = redis.Redis(host = redis_ip, port = 6379, db = 0, decode_responses=True)
-#rd_image = redis.Redis(host= redis_ip, port=6379, db=1, decode_responses=True)
+redis_ip = os.environ.get('REDIS_IP')
+if not redis_ip:
+    raise Exception('REDIS_IP enviornment variable not sen\n')
+rd = redis.Redis(host = redis_ip, port = 6379, db = 0, decode_responses=True)
+rd_image = redis.Redis(host= redis_ip, port=6379, db=1, decode_responses=True)
 
 #Connect to redis without kubernetes - for development of API
-rd = redis.Redis(host='redis-db', port=6379, db=0, decode_responses=True)
+#rd = redis.Redis(host='127.0.0.1', port=6379, db=0, decode_responses=True)
 
 # Second redis db to store plots on so as not not mix data
 # should probably make functions to catch exception errors, but that'll come later.
-rd_image = redis.Redis(host='redis-db', port=6379, db=1, decode_responses=True)
+#rd_image = redis.Redis(host='127.0.0.1', port=6379, db=1, decode_responses=True)
 
 #Load in data 
 @app.route('/data', methods = ['POST', 'GET', 'DELETE'])
@@ -285,8 +282,8 @@ def help():
                 output += f'{func.__doc__}\n\n'
     return output
 
-@app.route('/graph/<graph_data>', methods = ['GET','POST','DELETE'])
-def create_graph(graph_data:str):
+@app.route('/graph', methods = ['GET','POST','DELETE'])
+def create_graph():
     """
     """
     
@@ -298,125 +295,42 @@ def create_graph(graph_data:str):
         if (len(rd.keys()) == 0):
             return 'No data is available. Please Post the data.'
         else:
-            if graph_data == 'energy':
-                energy_radiated = []
-                ttl_impact_energy = []
-                keys = rd.keys()
-                for key in keys:
-                    if rd.hget(key, 'radiated_energy') is not None and rd.hget(key, 'impact_energy') is not None:
-                        # Need to ensure array sizes are the same.
-                        energy_radiated.append(float(rd.hget(key, 'radiated_energy')))
-                        ttl_impact_energy.append(float(rd.hget(key, 'impact_energy')))
+            energy_radiated = []
+            ttl_impact_energy = []
+            keys = rd.keys()
+            for key in keys:
+                if rd.hget(key, 'radiated_energy') is not None and rd.hget(key, 'impact_energy') is not None:
+                    # Need to ensure array sizes are the same.
+                    energy_radiated.append(float(rd.hget(key, 'radiated_energy')))
+                    ttl_impact_energy.append(float(rd.hget(key, 'impact_energy')))
+            
+            plt.scatter(energy_radiated, ttl_impact_energy)
+            plt.title('Energy Radiated vs Meteor Impact Energy')
+            plt.xlabel('Total Energy Radiated')
+            plt.ylabel('Total Impact Energy')
 
-                fig1 = plt.figure()
-                plt.scatter(energy_radiated, ttl_impact_energy)
-                plt.title('Energy Radiated vs Meteor Impact Energy')
-                plt.xlabel('Total Energy Radiated')
-                plt.ylabel('Total Impact Energy')
-
-                buf = io.BytesIO()
-                plt.savefig(buf, format = 'jpg')
-                buf.seek(0)
-
-                image_data = buf.getvalue()
-
-                rd_image.set('image', image_data.hex())
-
-                return 'Image has been posted.\n'
-
-            elif graph_data == 'location':
-                latitude_pos = []
-                longitude_pos = []
-                keys = rd.keys()
-                for key in keys:
-                    if rd.hget(key, 'latitude') is not None and rd.hget(key,'longitude') is not None:
-                        latitude_pos.append(rd.hget(key,'latitude'))
-                        longitude_pos.append(rd.hget(key,'longitude'))
-                 
-                lat_deg = [sub[:-1] for sub in latitude_pos]
-                latitude_dir = [sub[-1] for sub in latitude_pos]
-                lat_dir = []
-                for x in latitude_dir:
-                    if 'S' in x:
-                        lat_dir.append(-1)
-                    else:
-                        lat_dir.append(1)
-
-                long_deg = [sub[:-1] for sub in longitude_pos]
-                longitude_dir = [sub[-1] for sub in longitude_pos]
-                long_dir = []
-                for x in longitude_dir:
-                    if 'W' in x:
-                        long_dir.append(-1)
-                    else:
-                        long_dir.append(1)
-
-                latitude_pos = []
-                longitude_pos = []
-
-                for x in range(0,len(lat_dir)):
-                    latitude_pos.append(lat_dir[x] * lat_deg[x])
-                for x in range(0,len(long_dir)):
-                    longitude_pos.append(long_dir[x] * long_deg[x])
-                
-
-                fig2 = plt.figure(figsize=(8,6), edgecolor ='w')
-                m = Basemap(projection = 'cyl', resolution = None,\
-                        llcrnrlat=-90, urcrnrlat=90,\
-                        llcrnrlon=-180, urcrnrlon=180,)
-                draw_map(m)
-
-                plt.scatter(longitude_pos, latitude_pos)
-
-                buf = io.BytesIO()
-                plt.savefig(buf, format = 'jpg')
-                buf.seek(1)
-
-                image_data = buf.getvalue()
-
-                rd_image.set('image2', image_data.hex())
-
-                return 'Image has been posted.\n'
-
-
-    # posting/getting are identical to my hw8, which was working. Should work once POST does.
-    elif request.method == 'GET':
-        if graph_data == 'energy':
-            image = binascii.unhexlify(rd_image.get('image'))
-            buf = io.BytesIO(image)
+            buf = io.BytesIO()
+            plt.savefig(buf, format = 'jpg')
             buf.seek(0)
 
-            response = send_file(buf, mimetype = 'image/jpg', as_attachment=True, download_name='energy_graph.jpg')
+            image_data = buf.getvalue()
 
-            return response
+            rd_image.set('image', image_data.hex())
+            
+            return 'Image has been posted.\n'
+    
+    # posting/getting are identical to my hw8, which was working. Should work once POST does.
+    elif request.method == 'GET':
+        image = binascii.unhexlify(rd_image.get('image'))
+        buf = io.BytesIO(image)
+        buf.seek(0)
+        
+        response = send_file(buf, mimetype = 'image/jpg', as_attachment=True, download_name='graph.jpg')
 
-        elif graph_data == 'location':
-            image = binascii.unhexlify(rd_image.get('image2'))
-            buf = io.BytesIO(image)
-            buf.seek(1)
-            response = send_file(buf, mimetype = 'image/jpg', as_attachment=True, download_name='geograph_graph.jpg')
-
-            return response
+        return response
 
     else:
         return 'The method used is not supported. Please use GET, DELETE, or POST.'
-
-def draw_map(m, scale=0.2):
-    # draw a shaded-relief image
-    m.shadedrelief(scale=scale)
-    
-    # lats and longs are returned as a dictionary
-    lats = m.drawparallels(np.linspace(-90, 90, 13))
-    lons = m.drawmeridians(np.linspace(-180, 180, 13))
-
-    # keys contain the plt.Line2D instances
-    lat_lines = chain(*(tup[1][0] for tup in lats.items()))
-    lon_lines = chain(*(tup[1][0] for tup in lons.items()))
-    all_lines = chain(lat_lines, lon_lines)
-    
-    # cycle through these lines and set the desired style
-    for line in all_lines:
-        line.set(linestyle='-', alpha=0.3, color='w')
 
 @app.route('/jobs', methods = ['POST', 'GET'])
 def jobs_api():
@@ -461,23 +375,6 @@ def job_id(this_job_id):
         return data['status'] + '\n'
     else:
         return 'No data available at this job id.\n'
-
-def draw_map(m, scale=0.2):
-    # draw a shaded-relief image
-    m.shadedrelief(scale=scale)
-    
-    # lats and longs are returned as a dictionary
-    lats = m.drawparallels(np.linspace(-90, 90, 13))
-    lons = m.drawmeridians(np.linspace(-180, 180, 13))
-
-    # keys contain the plt.Line2D instances
-    lat_lines = chain(*(tup[1][0] for tup in lats.items()))
-    lon_lines = chain(*(tup[1][0] for tup in lons.items()))
-    all_lines = chain(lat_lines, lon_lines)
-    
-    # cycle through these lines and set the desired style
-    for line in all_lines:
-        line.set(linestyle='-', alpha=0.3, color='w')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
