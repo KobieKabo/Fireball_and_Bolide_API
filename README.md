@@ -128,7 +128,7 @@ $ curl -X [POST, GET, DELETE] username.coe332.tacc.cloud/
 |`/graph_energy`    | GET | Returns energy plot file from Redis_energy database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
-|`/graph_energy`    | GET | Returns speed plot file from Redis_speed database|
+|`/graph_speed`    | GET | Returns speed plot file from Redis_speed database|
 |            | DELETE |  Deletes plot from Redis_image database |
 |            | POST | Posts plot into Redis_image database |
 
