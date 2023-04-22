@@ -1,7 +1,9 @@
 # **Fireball and Bolide Tracker**
 
 ## **Project Objective**
-Sift through an abundance of positional and velocity data on fireball and bolide reportings documented by NASA. Build a Flask application for querying and returning information from the NASA data set.The included Dockerfile containerizes fireball_api.py to make it portable. ADD SOMETHING ABOUT KUBERNETES
+Sift through an abundance of positional and velocity data on fireball and bolide reportings documented by NASA. Build a Flask application for querying and returning information from the NASA data set.The included Dockerfile containerizes fireball_api.py to make it portable. The Fireball and Bolide Tracker application is hosted on the Kubernetes cluster and accessible to the outside world at a unique, public URL listed below.
+
+The front-end REST API has an abundance of endpoints to post, get, and delete data from Redis in addition to endpoints for submitting a job to plot data and retrieve the results. The back end workers use queue functionality to watch  for jobs being submitted by the user. Aditionally, the workers generate a plot and adds the image back to Redis such that the user can download it at will. 
 
 **Data Collected From:**
 https://data.nasa.gov/api/views/mc52-syum/rows.xml?accessType=DOWNLOAD
@@ -104,6 +106,8 @@ We can test by running the following curl command from anywhere, including our l
 
 The API front end is expose on port 5000 inside the container. Try the following routes:
 
+$ curl -X [POST, GET, DELETE] username.coe332.tacc.cloud/
+
 | Route         | Method        | Return |
 | ------------- |:-------------:| ------------- |
 | `/data`     | GET | Return all data in Redis database | 
@@ -114,33 +118,66 @@ The API front end is expose on port 5000 inside the container. Try the following
 | `/timestamp/<string: pr_date>/speed`  | GET |  Returns the speed of the fireball for a specific timestamp |
 | `/timestamp/<string: pr_date>/energy`  | GET |  Returns the energy for a specific timestamp |
 | `/timestamp/<string: pr_date>/location`  | GET |  Return geographical position for a specific timestamp |
+| `/jobs`     | GET | List all of the jobs in the Redis database |
+|             | POST | Create a new job |
+| `/jobs/<string: job_id>`     | GET | Get status of a specific job by id. |
+| `/jobs/<string: job_id>/results`     | GET | Return the outputs of a completed job. |
 | `/help`  | GET |  Returns text that describes each route & what they do |
 |`/image`    | GET | Returns plot file from Redis_image database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
 
 
-	$ curl -X POST localhost:5000/data	Load the entire data set into Redis.
-	
-	$ curl -X GET localhost:5000/data 	Returns a list of all data from Redis. 
+To download graphs to local computer:
 
-	$ curl -X DELETE localhost:5000/data	Delete all of the data from Redis.
-
-	$ curl localhost:5000/timestamp		Return all timestamps from Redis.
-
-	$ curl localhost:5000/timestamp/<string: pr_date> 	Return all data for a specific timestamp.
-
-	$ curl localhost:5000/timestamp/<string: pr_date>/speed 	Return velocity data for a specific timestamp.
-
-	$ curl localhost:5000/timestamp/<string: pr_date>/energy 	Return energy data for a specific timestamp.
-
-	$ curl localhost:5000/timestamp/<string: pr_date>/location 	Return positional data for a specific timestamp.
-
-	$ curl localhost:5000/help	Returns help text (as a string) that briefly describes each route.
+	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
 
 ###### **Running iss_tracker.py**
-
-To get graph from pod : kubectl cp app-test-flask-55db755fcb-58x6h:graph.jpg graphdownload.jpg
-
 	
 **Expected Output, Sample**
+
+curl -X POST khanks.coe332.tacc.cloud/data
+
+curl -X GET khanks.coe332.tacc.cloud/data
+
+curl -X DELETE khanks.coe332.tacc.cloud/data
+
+curl khanks.coe332.tacc.cloud/timestamp
+
+[
+  "2012-08-27T06:57:43",
+  "2014-05-08T19:42:37",
+  "2012-09-11T22:07:30",
+  "2015-04-30T10:21:01",
+  "2015-03-08T04:26:28",
+  "2012-07-27T04:19:50",
+  "2014-11-28T11:47:18",
+  "2014-02-13T06:47:42",
+  "2014-07-29T03:07:43",
+  "2012-09-10T01:03:32"
+  (continued)
+  ]
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
+
+{
+  "_address": "https://data.nasa.gov/resource/mc52-syum/row-atif-qn38_syje",
+  "_id": "row-atif-qn38_syje",
+  "_position": "0",
+  "_uuid": "00000000-0000-0000-5740-8F57B1576ED5",
+  "altitude": "26.8",
+  "impact_energy": "0.39",
+  "latitude": "36.4N",
+  "longitude": "41.5E",
+  "peak_brightness": "2012-07-25T07:48:20",
+  "radiated_energy": "133000000000",
+  "velocity_magnitude": "343.19999999999993",
+  "x_velocity": "0.8",
+  "y_velocity": "2",
+  "z_velocity": "-18.4"
+}
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
+
+
+

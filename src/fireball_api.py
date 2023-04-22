@@ -91,7 +91,7 @@ def load_data():
                 if impact_energy is not None:
                     item_dict['impact_energy'] = impact_energy.text
                 if x_velocity is not None and y_velocity is not None and z_velocity is not None:
-                    velocity_magnitude = float(x_velocity.text)**2 + float(y_velocity.text)**2 + float(z_velocity.text)**2
+                    velocity_magnitude = float((float(x_velocity.text)**2 + float(y_velocity.text)**2 + float(z_velocity.text)**2)**0.5)
                     item_dict['velocity_magnitude'] = velocity_magnitude
 
 
