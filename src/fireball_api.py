@@ -41,6 +41,11 @@ rd_image = redis.Redis(host= redis_ip, port=6379, db=1, decode_responses=True)
 @app.route('/data', methods = ['POST', 'GET', 'DELETE'])
 def load_data():
     """
+    POST - Post all fireball and bolide data to Redis.
+
+    GET - Return all fireball and bolide data from redis to the user.
+
+    DELETE - Delete all fireball and bolide data from Redis.
     """
     if request.method == 'POST' :
         url = "https://data.nasa.gov/api/views/mc52-syum/rows.xml?accessType=DOWNLOAD"
@@ -115,6 +120,11 @@ def load_data():
 @app.route('/timestamp', methods = ['GET'])
 def peak_brightness_timestamp():
     """
+    Description:
+    API endpoint that returns a list of peak brightness dates for all objects in the database.
+
+    Returns:
+    JSON object containing a list of peak brightness dates for all objects in the database.
     """
     keys = rd.keys()
     data = []
@@ -128,6 +138,11 @@ def peak_brightness_timestamp():
 @app.route('/timestamp/<string:pb_date>', methods = ['GET'])
 def value_at_pb_date(pb_date):
     """
+    Description:
+    API endpoint that returns all data for a given timestamp.
+
+    Returns:
+    JSON object containing the data for a specific timestamp in the database.
     """
     data = rd.hgetall(pb_date)
     if not data:
@@ -137,6 +152,11 @@ def value_at_pb_date(pb_date):
 @app.route('/timestamp/<string:pb_date>/speed', methods = ['GET'])
 def velocity_at_pb_date(pb_date):
     """
+    Description:
+    API endpoint that returns the velocity values for a specific timestamp in the database.
+
+    Returns:
+    JSON object containing a dictionary of velocity data. 
     """
     data = value_at_pb_date(pb_date)
     #Return only the velocity data
@@ -158,6 +178,11 @@ def velocity_at_pb_date(pb_date):
 @app.route('/timestamp/<string:pb_date>/energy', methods = ['GET'])
 def energy_at_pb_date(pb_date):
     """
+    Description:
+    API endpoint that returns the velocity values for a specific timestamp in the database.
+
+    Returns:
+    JSON object containing a dictionary of energy data for a specific timestamp.
     """
     data = value_at_pb_date(pb_date)
     if not data:
@@ -240,6 +265,11 @@ def fireball_location(pb_date:str) -> dict:
 @app.route('/help', methods = ['GET'])
 def help():
     """
+    Description:
+    This function is an API endpoint that returns information about all available routes and HTTP methods in the application.
+    
+    Returns:
+    A string containing a list of all available routes and their associated HTTP methods, as well as the docstrings for each endpoint function.
     """
     output = 'Available routs and methods: \n'
 
@@ -305,8 +335,10 @@ def create_graph():
 @app.route('/jobs', methods = ['POST', 'GET'])
 def jobs_api():
     """
-    API route for creating a new job to do some analysis. This route accepts a JSON payload
+    POST - API route for creating a new job to do some analysis. This route accepts a JSON payload
     describing the job to be created.
+
+    GET - API route to return jobs to user
     """
     if request.method == 'POST':
         start = date.today().year
@@ -331,7 +363,13 @@ def jobs_api():
 
 @app.route('/jobs/<string:this_job_id>', methods = ['GET'])
 def job_id(this_job_id):
-    
+    """
+    Description:
+    API endpoint to return status of a job specified by job_id to user. 
+
+    Returns:
+    String describing status of specified job. 
+    """
     data = rd.hgetall(this_job_id)
     if data:
         return data['status'] + '\n'
@@ -340,8 +378,3 @@ def job_id(this_job_id):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-    #config = get_config()
-    #if config.get('debug', True):
-    #    app.run(debug=True, host='0.0.0.0')
-    #else:
-    #    app.run(host = '0.0.0.0')

@@ -123,7 +123,7 @@ $ curl -X [POST, GET, DELETE] username.coe332.tacc.cloud/
 | `/jobs/<string: job_id>`     | GET | Get status of a specific job by id. |
 | `/jobs/<string: job_id>/results`     | GET | Return the outputs of a completed job. |
 | `/help`  | GET |  Returns text that describes each route & what they do |
-|`/image`    | GET | Returns plot file from Redis_image database|
+|`/graph`    | GET | Returns plot file from Redis_image database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
 
@@ -179,5 +179,94 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
 
 curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
 
+{
+  "velocity_magnitude": "18.525657883055057 [km/s]",
+  "x_velocity": "0.8 [km/s]",
+  "y_velocity": "2 [km/s]",
+  "z_velocity": "-18.4 [km/s]"
+}
 
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/energy
+
+{
+  "calculated_impact_energy": "0.39 [kT]",
+  "radiated_energy": "133000000000 [J]"
+}
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
+
+{
+  "altitude": "26.8",
+  "county": "",
+  "district": null,
+  "geo_country": "Iraq",
+  "latitude": 36.4,
+  "longitude": 41.5,
+  "pos_unit": "km",
+  "region": "",
+  "state": "Nineveh Governorate",
+  "x_velocity": "0.8 [km/s]",
+  "y_velocity": "2 [km/s]",
+  "z_velocity": "-18.4 [km/s]"
+}
+
+curl -X POST khanks.coe332.tacc.cloud/graph
+
+Image has been posted.
+
+curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
+
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 19335  100 19335    0     0   248k      0 --:--:-- --:--:-- --:--:--  248k
+
+curl -X POST khanks.coe332.tacc.cloud/jobs
+
+{
+  "end": 2023,
+  "id": "4f345b4a-41f9-43f8-a88c-1a978540d7b7",
+  "start": 2023,
+  "status": "submitted"
+}
+
+curl -X GET khanks.coe332.tacc.cloud/jobs
+
+[
+  {
+    "end": "2023",
+    "id": "4f345b4a-41f9-43f8-a88c-1a978540d7b7",
+    "start": "2023",
+    "status": "submitted"
+  },
+  {
+    "end": "2023",
+    "id": "d265cece-97e2-4518-95d4-f0d22ef0f93c",
+    "start": "2023",
+    "status": "complete"
+  },
+  {
+    "end": "2023",
+    "id": "1ae08d3c-dc4a-419f-9c15-3cd228c89d39",
+    "start": "2023",
+    "status": "complete"
+  },
+  {
+    "end": "2023",
+    "id": "9434fa6e-021b-4a97-8f74-c602291cd73c",
+    "start": "2023",
+    "status": "complete"
+  },
+  {
+    "end": "2023",
+    "id": "f84a5c8f-6607-4e8d-85b0-da7308051a6c",
+    "start": "2023",
+    "status": "complete"
+  }
+]
+
+curl khanks.coe332.tacc.cloud/jobs/d265cece-97e2-4518-95d4-f0d22ef0f93c
+
+complete
+
+curl khanks.coe332.tacc.cloud/help
 
