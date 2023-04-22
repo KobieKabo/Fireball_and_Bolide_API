@@ -1,7 +1,9 @@
 # **Fireball and Bolide Tracker**
 
 ## **Project Objective**
-Sift through an abundance of positional and velocity data on fireball and bolide reportings documented by NASA. Build a Flask application for querying and returning information from the NASA data set.The included Dockerfile containerizes fireball_api.py to make it portable. ADD SOMETHING ABOUT KUBERNETES
+Sift through an abundance of positional and velocity data on fireball and bolide reportings documented by NASA. Build a Flask application for querying and returning information from the NASA data set.The included Dockerfile containerizes fireball_api.py to make it portable. The Fireball and Bolide Tracker application is hosted on the Kubernetes cluster and accessible to the outside world at a unique, public URL listed below.
+
+The front-end REST API has an abundance of endpoints to post, get, and delete data from Redis in addition to endpoints for submitting a job to plot data and retrieve the results. The back end workers use queue functionality to watch  for jobs being submitted by the user. Aditionally, the workers generate a plot and adds the image back to Redis such that the user can download it at will. 
 
 **Data Collected From:**
 https://data.nasa.gov/api/views/mc52-syum/rows.xml?accessType=DOWNLOAD
@@ -27,11 +29,15 @@ The fireball_api.py script initializes a Flask instance, loads data from the NAS
 
 How to pull and use the Dockerfule from Docker Hub:
 
-	docker pull khanks0217/fireball_api:1.0
+	docker pull khanks0217/fireball_api:1.1
+
+	docker pull khanks0217/fireball_api:1.wrk
 
 How to build a new image from Dockerfile:
 
-	docker build -t username/fireball_api:1.0 .
+	docker build -f Dockerfile.api -t username/fireball_api:1.1
+
+	docker build -f Dockerfile.wrk -t username/fireball_api:1.wrk
 
 #### **Instructions - How to use genes_api on Kubernetes**
 
@@ -62,23 +68,45 @@ Create a flask service:
 
 	kubectl apply -f app-prod-api-service.yml
 
-How to curl data while in kubernetes cluster?
+Create a worker deployment:
 
-	Exec into test flask pod --> kubectl get pods
+	kubectl apply -f app-prod-wrk-deployment.yml
 
-	kubectl exec -it app-test-flask-54cc78df9b-djtwf -- /bin/bash
+Create a NodePort:
 
-	curl -X POST localhost:5000/data
+	kubectl apply -f app-prod-api-nodeport.yml
 
-Start the container in the foreground:
+Copy the nodeport port to app-prod-api-ingress.yml
 
-	docker-compose config
+	kubectl get services
 
-With the iss_tracker container running, curl in another window to interact with the program.
+	NAME                         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+	flasktest-service-nodeport   NodePort    10.233.15.48   <none>        5000:31587/TCP   45s
+
+	Edit app-prod-api-ingress.yml 
+	host: "username.coe332.tacc.cloud" <-- This should be your username
+	...
+	port:
+	  number: 31587   <--This should be the same as the port from NodePort 5000:/XXXXX
+
+Create the Ingress object:
+
+	kubectl apply -f app-prod-api-ingress.yml
+
+	kubectl get ingress
+
+	NAME                CLASS    HOSTS                       ADDRESS   PORTS   AGE
+	flasktest-ingress   <none>   username.coe332.tacc.cloud             80      102s
+
+We can test by running the following curl command from anywhere, including our laptops.
+
+	curl -X POST username.coe332.tacc.cloud/data
 
 ##### **Fireball API Front End:**
 
 The API front end is expose on port 5000 inside the container. Try the following routes:
+
+$ curl -X [POST, GET, DELETE] username.coe332.tacc.cloud/
 
 | Route         | Method        | Return |
 | ------------- |:-------------:| ------------- |
@@ -90,34 +118,155 @@ The API front end is expose on port 5000 inside the container. Try the following
 | `/timestamp/<string: pr_date>/speed`  | GET |  Returns the speed of the fireball for a specific timestamp |
 | `/timestamp/<string: pr_date>/energy`  | GET |  Returns the energy for a specific timestamp |
 | `/timestamp/<string: pr_date>/location`  | GET |  Return geographical position for a specific timestamp |
+| `/jobs`     | GET | List all of the jobs in the Redis database |
+|             | POST | Create a new job |
+| `/jobs/<string: job_id>`     | GET | Get status of a specific job by id. |
+| `/jobs/<string: job_id>/results`     | GET | Return the outputs of a completed job. |
 | `/help`  | GET |  Returns text that describes each route & what they do |
-|`/image`    | GET | Returns plot file from Redis_image database|
+|`/graph`    | GET | Returns plot file from Redis_image database|
 | 	     | DELETE |  Deletes plot from Redis_image database | 
 | 	     | POST | Posts plot into Redis_image database | 
 
 
-	$ curl -X POST localhost:5000/data	Load the entire data set into Redis.
-	
-	$ curl -X GET localhost:5000/data 	Returns a list of all data from Redis. 
+To download graphs to local computer:
 
-	$ curl -X DELETE localhost:5000/data	Delete all of the data from Redis.
-
-	$ curl localhost:5000/timestamp		Return all timestamps from Redis.
-
-	$ curl localhost:5000/timestamp/<string: pr_date> 	Return all data for a specific timestamp.
-
-	$ curl localhost:5000/timestamp/<string: pr_date>/speed 	Return velocity data for a specific timestamp.
-
-	$ curl localhost:5000/timestamp/<string: pr_date>/energy 	Return energy data for a specific timestamp.
-
-	$ curl localhost:5000/timestamp/<string: pr_date>/location 	Return positional data for a specific timestamp.
-
-
-	$ curl localhost:5000/help	Returns help text (as a string) that briefly describes each route.
+	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
 
 ###### **Running iss_tracker.py**
-
-To get graph from pod : kubectl cp app-test-flask-55db755fcb-58x6h:graph.jpg graphdownload.jpg
-
 	
 **Expected Output, Sample**
+
+curl -X POST khanks.coe332.tacc.cloud/data
+
+curl -X GET khanks.coe332.tacc.cloud/data
+
+curl -X DELETE khanks.coe332.tacc.cloud/data
+
+curl khanks.coe332.tacc.cloud/timestamp
+
+[
+  "2012-08-27T06:57:43",
+  "2014-05-08T19:42:37",
+  "2012-09-11T22:07:30",
+  "2015-04-30T10:21:01",
+  "2015-03-08T04:26:28",
+  "2012-07-27T04:19:50",
+  "2014-11-28T11:47:18",
+  "2014-02-13T06:47:42",
+  "2014-07-29T03:07:43",
+  "2012-09-10T01:03:32"
+  (continued)
+  ]
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
+
+{
+  "_address": "https://data.nasa.gov/resource/mc52-syum/row-atif-qn38_syje",
+  "_id": "row-atif-qn38_syje",
+  "_position": "0",
+  "_uuid": "00000000-0000-0000-5740-8F57B1576ED5",
+  "altitude": "26.8",
+  "impact_energy": "0.39",
+  "latitude": "36.4N",
+  "longitude": "41.5E",
+  "peak_brightness": "2012-07-25T07:48:20",
+  "radiated_energy": "133000000000",
+  "velocity_magnitude": "343.19999999999993",
+  "x_velocity": "0.8",
+  "y_velocity": "2",
+  "z_velocity": "-18.4"
+}
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
+
+{
+  "velocity_magnitude": "18.525657883055057 [km/s]",
+  "x_velocity": "0.8 [km/s]",
+  "y_velocity": "2 [km/s]",
+  "z_velocity": "-18.4 [km/s]"
+}
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/energy
+
+{
+  "calculated_impact_energy": "0.39 [kT]",
+  "radiated_energy": "133000000000 [J]"
+}
+
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
+
+{
+  "altitude": "26.8",
+  "county": "",
+  "district": null,
+  "geo_country": "Iraq",
+  "latitude": 36.4,
+  "longitude": 41.5,
+  "pos_unit": "km",
+  "region": "",
+  "state": "Nineveh Governorate",
+  "x_velocity": "0.8 [km/s]",
+  "y_velocity": "2 [km/s]",
+  "z_velocity": "-18.4 [km/s]"
+}
+
+curl -X POST khanks.coe332.tacc.cloud/graph
+
+Image has been posted.
+
+curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
+
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 19335  100 19335    0     0   248k      0 --:--:-- --:--:-- --:--:--  248k
+
+curl -X POST khanks.coe332.tacc.cloud/jobs
+
+{
+  "end": 2023,
+  "id": "4f345b4a-41f9-43f8-a88c-1a978540d7b7",
+  "start": 2023,
+  "status": "submitted"
+}
+
+curl -X GET khanks.coe332.tacc.cloud/jobs
+
+[
+  {
+    "end": "2023",
+    "id": "4f345b4a-41f9-43f8-a88c-1a978540d7b7",
+    "start": "2023",
+    "status": "submitted"
+  },
+  {
+    "end": "2023",
+    "id": "d265cece-97e2-4518-95d4-f0d22ef0f93c",
+    "start": "2023",
+    "status": "complete"
+  },
+  {
+    "end": "2023",
+    "id": "1ae08d3c-dc4a-419f-9c15-3cd228c89d39",
+    "start": "2023",
+    "status": "complete"
+  },
+  {
+    "end": "2023",
+    "id": "9434fa6e-021b-4a97-8f74-c602291cd73c",
+    "start": "2023",
+    "status": "complete"
+  },
+  {
+    "end": "2023",
+    "id": "f84a5c8f-6607-4e8d-85b0-da7308051a6c",
+    "start": "2023",
+    "status": "complete"
+  }
+]
+
+curl khanks.coe332.tacc.cloud/jobs/d265cece-97e2-4518-95d4-f0d22ef0f93c
+
+complete
+
+curl khanks.coe332.tacc.cloud/help
+
