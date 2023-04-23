@@ -54,7 +54,7 @@ How to build a new image from Dockerfile:
 
 	docker build -f docker/Dockerfile.wrk -t username/fireball_api:1.wrk
 
-#### **Instructions - How to use genes_api on Kubernetes**
+### **Instructions - How to use genes_api on Kubernetes**
 
 Create a persistent volume claim (pvc)
 
