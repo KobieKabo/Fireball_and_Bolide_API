@@ -22,16 +22,16 @@ What is a fireball or bolide? A fireball is an unusually bright meteor that reac
 	*Data Description adapted from https://catalog.data.gov/dataset/fireball-and-bolide-reports* 
 <summary>Python Script Information</summary>
 <br>
-### **fireball_api.py Description:**
+**fireball_api.py Description:**
 
 The fireball_api.py script initializes a Flask instance, loads data from the NASA API linked above, and stores the data in Redis. The flask application tracks the altitude, location and velocity of the bolides which given in latitudes/longitudes and Cartesian vectors for both position.This data along with a time stamp, and calculated radiated and impact energy describe the complete state of the documented fireballs and bolides.
 
-### **jobs.py Description:**
+**jobs.py Description:**
 
 The jobs.py script allows the user to queue up jobs through the Flask application initialized by the fireball_api.py script. It's through this queue that we're able
 to instance many jobs at once, and allow them to run when a worker becomes free, or is available. This script allows for the creation of job instances, updating them, and retrieving past/current jobs that have finished or are currently runnning. When retrieving jobs, you get the specific job ID, start & finish time as well as its current status.
 
-### **worker.py Description:**
+**worker.py Description:**
 
 The workers.py script is what allows the jobs.py script to complete the job that was requested. Where the worker is, well the worker for the 'boss' or jobs.py script in this case. This script is what retrieves items from the queue list, and then updates the status of the job as it completes its task. The task being the analysis, or whatever was requested from the user via the jobs.py script. Where once the job is finished, this script then writes the analysis or task to the Redis databases that are shared between the three scripts.
 </details>
