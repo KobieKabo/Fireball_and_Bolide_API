@@ -138,7 +138,7 @@ To download graphs to local computer:
 
 	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph_speed --output speed_graph.jpg
 
-###### **Running iss_tracker.py**
+###### **Running fireball_api.py**
 	
 **Expected Output, Sample**
 
