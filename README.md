@@ -21,23 +21,25 @@ What is a fireball or bolide? A fireball is an unusually bright meteor that reac
 	Impact Energy - [kT]
 	*Data Description adapted from https://catalog.data.gov/dataset/fireball-and-bolide-reports* 
 <details>
-<summary>Python Script Information</summary>
+<summary>Python Script: Information</summary>
 <br>
-**fireball_api.py Description:**
+
+## **fireball_api.py Description:**
 
 The fireball_api.py script initializes a Flask instance, loads data from the NASA API linked above, and stores the data in Redis. The flask application tracks the altitude, location and velocity of the bolides which given in latitudes/longitudes and Cartesian vectors for both position.This data along with a time stamp, and calculated radiated and impact energy describe the complete state of the documented fireballs and bolides.
 
-**jobs.py Description:**
+## **jobs.py Description:**
 
 The jobs.py script allows the user to queue up jobs through the Flask application initialized by the fireball_api.py script. It's through this queue that we're able
 to instance many jobs at once, and allow them to run when a worker becomes free, or is available. This script allows for the creation of job instances, updating them, and retrieving past/current jobs that have finished or are currently runnning. When retrieving jobs, you get the specific job ID, start & finish time as well as its current status.
 
-**worker.py Description:**
+## **worker.py Description:**
 
 The workers.py script is what allows the jobs.py script to complete the job that was requested. Where the worker is, well the worker for the 'boss' or jobs.py script in this case. This script is what retrieves items from the queue list, and then updates the status of the job as it completes its task. The task being the analysis, or whatever was requested from the user via the jobs.py script. Where once the job is finished, this script then writes the analysis or task to the Redis databases that are shared between the three scripts.
 </details>
-#### **Dockerfile Description & Instructions**
 
+
+### **Dockerfile Description & Instructions:**
 How to pull and use the Dockerfule from Docker Hub:
 
 	docker pull khanks0217/fireball_api:1.1
@@ -114,8 +116,9 @@ Create the Ingress object:
 We can test by running the following curl command from anywhere, including our laptops.
 
 	curl -X POST username.coe332.tacc.cloud/data
-
-##### **Fireball API Front End:**
+<details>
+<summary>Fireball API Front End:</summary>
+<br>
 
 The API front end is expose on port 5000 inside the container. Try the following routes:
 
@@ -148,11 +151,16 @@ To download graphs to local computer:
 	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph_energy --output energy_graph.jpg
 
 	[local] $ curl -X GET khanks.coe332.tacc.cloud/graph_speed --output speed_graph.jpg
-
+</details>
+	
 ###### **Running fireball_api.py**
 	
-**Expected Output, Sample**
-
+## **Expected Output, Sample**
+<details>
+<summary> ROUTE: /data </summary>
+<br>
+	
+	
 curl -X POST khanks.coe332.tacc.cloud/data
 ```
 Fireball and Bolide data loaded into Redis.	
@@ -190,6 +198,12 @@ curl -X DELETE khanks.coe332.tacc.cloud/data
 ```
 Fireball and Bolide data DELETED from Redis.
 ```
+</details>
+	
+<details>
+<summary> ROUTE: /timestamp/et al. </summary>
+<br>
+
 
 curl khanks.coe332.tacc.cloud/timestamp
 ```
@@ -263,21 +277,32 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
   "z_velocity": "-18.4 [km/s]"
 }
 ```
+</details>
+	
+<details>
+<summary> ROUTE: /graph_energy </summary>
+<br>
+
 
 curl -X POST khanks.coe332.tacc.cloud/graph
 ```
 Image has been posted.
 ```
 
-curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
+curl -X GET khanks.coe332.tacc.cloud/graph_energy --output energy_graph.jpg
 ```
 % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100 19335  100 19335    0     0   248k      0 --:--:-- --:--:-- --:--:--  248k
 ```
-```
-curl -X POST khanks.coe332.tacc.cloud/jobs
+</details>
 
+<details>
+<summary> ROUTE: /jobs </summary>
+<br>
+
+curl -X POST khanks.coe332.tacc.cloud/jobs
+```
 {
   "end": 2023,
   "id": "4f345b4a-41f9-43f8-a88c-1a978540d7b7",
@@ -325,6 +350,12 @@ curl khanks.coe332.tacc.cloud/jobs/d265cece-97e2-4518-95d4-f0d22ef0f93c
 ```
 complete
 ```
+</details>	
+
+<details>
+<summary> ROUTE: /help </summary>
+<br>
+
 curl khanks.coe332.tacc.cloud/help
 ```
 Available routs and methods: 
@@ -419,3 +450,5 @@ Available routs and methods:
     Returns:
     String describing status of specified job.
 ```
+
+</details>
