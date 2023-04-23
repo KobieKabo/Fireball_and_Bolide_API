@@ -20,6 +20,7 @@ What is a fireball or bolide? A fireball is an unusually bright meteor that reac
 	Radiated Energy - [J]
 	Impact Energy - [kT]
 	*Data Description adapted from https://catalog.data.gov/dataset/fireball-and-bolide-reports* 
+<details>
 <summary>Python Script Information</summary>
 <br>
 **fireball_api.py Description:**
