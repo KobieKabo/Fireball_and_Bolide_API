@@ -284,7 +284,7 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
 <br>
 
 
-curl -X POST khanks.coe332.tacc.cloud/graph
+curl -X POST khanks.coe332.tacc.cloud/graph_energy
 ```
 Image has been posted.
 ```
