@@ -259,9 +259,9 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/energy
   "radiated_energy": "133000000000 [J]"
 }
 ```
-```
-curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
 
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
+```
 {
   "altitude": "26.8",
   "county": "",
