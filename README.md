@@ -141,14 +141,14 @@ To download graphs to local computer:
 ###### **Running iss_tracker.py**
 	
 **Expected Output, Sample**
-```
-curl -X POST khanks.coe332.tacc.cloud/data
 
+curl -X POST khanks.coe332.tacc.cloud/data
+```
 Fireball and Bolide data loaded into Redis.	
 ```
-```
-curl -X GET khanks.coe332.tacc.cloud/data
 
+curl -X GET khanks.coe332.tacc.cloud/data
+```
 {
     "_address": "https://data.nasa.gov/resource/mc52-syum/row-5m8i_9fxe~2q47",
     "_id": "row-5m8i_9fxe~2q47",
@@ -174,14 +174,14 @@ curl -X GET khanks.coe332.tacc.cloud/data
 
 	...continued
 ```
-```
-curl -X DELETE khanks.coe332.tacc.cloud/data
 
+curl -X DELETE khanks.coe332.tacc.cloud/data
+```
 Fireball and Bolide data DELETED from Redis.
 ```
-```
-curl khanks.coe332.tacc.cloud/timestamp
 
+curl khanks.coe332.tacc.cloud/timestamp
+```
 [
   "2012-08-27T06:57:43",
   "2014-05-08T19:42:37",
@@ -196,9 +196,9 @@ curl khanks.coe332.tacc.cloud/timestamp
   (continued)
   ]
 ```
-```
-curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
 
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
+```
 {
   "_address": "https://data.nasa.gov/resource/mc52-syum/row-atif-qn38_syje",
   "_id": "row-atif-qn38_syje",
@@ -216,9 +216,9 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
   "z_velocity": "-18.4"
 }
 ```
-```
-curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
 
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
+```
 {
   "velocity_magnitude": "18.525657883055057 [km/s]",
   "x_velocity": "0.8 [km/s]",
@@ -226,9 +226,9 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
   "z_velocity": "-18.4 [km/s]"
 }
 ```
-```
-curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/energy
 
+curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/energy
+```
 {
   "calculated_impact_energy": "0.39 [kT]",
   "radiated_energy": "133000000000 [J]"
@@ -252,14 +252,14 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
   "z_velocity": "-18.4 [km/s]"
 }
 ```
-```
-curl -X POST khanks.coe332.tacc.cloud/graph
 
+curl -X POST khanks.coe332.tacc.cloud/graph
+```
 Image has been posted.
 ```
-```
-curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
 
+curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
+```
 % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100 19335  100 19335    0     0   248k      0 --:--:-- --:--:-- --:--:--  248k
@@ -274,9 +274,9 @@ curl -X POST khanks.coe332.tacc.cloud/jobs
   "status": "submitted"
 }
 ```
-```
-curl -X GET khanks.coe332.tacc.cloud/jobs
 
+curl -X GET khanks.coe332.tacc.cloud/jobs
+```
 [
   {
     "end": "2023",
@@ -310,14 +310,12 @@ curl -X GET khanks.coe332.tacc.cloud/jobs
   }
 ]
 ```
-```
 curl khanks.coe332.tacc.cloud/jobs/d265cece-97e2-4518-95d4-f0d22ef0f93c
-
+```
 complete
 ```
-```
 curl khanks.coe332.tacc.cloud/help
-
+```
 Available routs and methods: 
 /data [POST,GET,DELETE,HEAD,OPTIONS]
 
