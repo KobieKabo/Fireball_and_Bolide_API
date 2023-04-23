@@ -141,11 +141,12 @@ To download graphs to local computer:
 ###### **Running iss_tracker.py**
 	
 **Expected Output, Sample**
-
+```
 curl -X POST khanks.coe332.tacc.cloud/data
 
 Fireball and Bolide data loaded into Redis.	
-
+```
+```
 curl -X GET khanks.coe332.tacc.cloud/data
 
 {
@@ -172,11 +173,13 @@ curl -X GET khanks.coe332.tacc.cloud/data
   }
 
 	...continued
-
+```
+```
 curl -X DELETE khanks.coe332.tacc.cloud/data
 
 Fireball and Bolide data DELETED from Redis.
-
+```
+```
 curl khanks.coe332.tacc.cloud/timestamp
 
 [
@@ -192,7 +195,8 @@ curl khanks.coe332.tacc.cloud/timestamp
   "2012-09-10T01:03:32"
   (continued)
   ]
-
+```
+```
 curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
 
 {
@@ -211,7 +215,8 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20
   "y_velocity": "2",
   "z_velocity": "-18.4"
 }
-
+```
+```
 curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
 
 {
@@ -220,14 +225,16 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/speed
   "y_velocity": "2 [km/s]",
   "z_velocity": "-18.4 [km/s]"
 }
-
+```
+```
 curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/energy
 
 {
   "calculated_impact_energy": "0.39 [kT]",
   "radiated_energy": "133000000000 [J]"
 }
-
+```
+```
 curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
 
 {
@@ -244,17 +251,20 @@ curl khanks.coe332.tacc.cloud/timestamp/2012-07-25T07:48:20/location
   "y_velocity": "2 [km/s]",
   "z_velocity": "-18.4 [km/s]"
 }
-
+```
+```
 curl -X POST khanks.coe332.tacc.cloud/graph
 
 Image has been posted.
-
+```
+```
 curl -X GET khanks.coe332.tacc.cloud/graph --output graph.jpg
 
 % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100 19335  100 19335    0     0   248k      0 --:--:-- --:--:-- --:--:--  248k
-
+```
+```
 curl -X POST khanks.coe332.tacc.cloud/jobs
 
 {
@@ -263,7 +273,8 @@ curl -X POST khanks.coe332.tacc.cloud/jobs
   "start": 2023,
   "status": "submitted"
 }
-
+```
+```
 curl -X GET khanks.coe332.tacc.cloud/jobs
 
 [
@@ -298,11 +309,13 @@ curl -X GET khanks.coe332.tacc.cloud/jobs
     "status": "complete"
   }
 ]
-
+```
+```
 curl khanks.coe332.tacc.cloud/jobs/d265cece-97e2-4518-95d4-f0d22ef0f93c
 
 complete
-
+```
+```
 curl khanks.coe332.tacc.cloud/help
 
 Available routs and methods: 
@@ -313,7 +326,6 @@ Available routs and methods:
     GET - Return all fireball and bolide data from redis to the user.
 
     DELETE - Delete all fireball and bolide data from Redis.
-    
 
 /timestamp [HEAD,OPTIONS,GET]
 
@@ -397,4 +409,4 @@ Available routs and methods:
 
     Returns:
     String describing status of specified job.
-
+```
